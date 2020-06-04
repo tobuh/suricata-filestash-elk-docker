@@ -1,0 +1,28 @@
+# https://github.com/elastic/beats/blob/master/filebeat/filebeat.reference.yml
+# https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-module-suricata.html
+filebeat.modules:
+- module: suricata
+  eve:
+    enabled: true
+    var.paths: ["/var/log/suricata/eve.json"]
+
+#========================== Elasticsearch output ===============================
+output.elasticsearch:
+  hosts: ["elasticsearch:9200"]
+  #username: ${ELASTICSEARCH_USERNAME}
+  #password: ${ELASTICSEARCH_PASSWORD}
+
+#============================== Dashboards =====================================
+setup.dashboards:
+  enabled: true
+
+#============================== Kibana =========================================
+setup.kibana:
+  host: "kibana:5601"
+  #username: ${ELASTICSEARCH_USERNAME}
+  #password: ${ELASTICSEARCH_PASSWORD}
+
+#============================== Xpack Monitoring ===============================
+#xpack.monitoring:
+#  enabled: true
+#  elasticsearch:

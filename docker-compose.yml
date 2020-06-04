@@ -1,0 +1,98 @@
+version: '3'
+
+services:
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+    #volumes:
+    #  - ./elasticsearch/data:/usr/share/elasticsearch/data
+    networks:
+      - elk
+    environment:
+      cluster.name: elk
+      network.host: 0.0.0.0
+      discovery.type: single-node
+      ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+
+  #logstash:
+  #  image: docker.elastic.co/logstash/logstash:7.6.2
+  #  volumes:
+  #    - ./suricata/logs:/var/log/suricata:ro
+  #    - ./logstash/since.db:/var/lib/logstash/since.db
+  #    - ./logstash/pipeline:/usr/share/logstash/pipeline
+  #    #- ./logstash/templates:/etc/logstash/templates
+  #  networks:
+  #    - elk
+  #  environment:
+  #    http.host: 0.0.0.0
+  #    LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+  #  restart: always
+  #  depends_on:
+  #    - elasticsearch
+
+  #filebeat_setup:
+  #  image: docker.elastic.co/beats/filebeat:7.6.2
+  #  command: ["setup --modules=suricata -e -d '*' -c filebeat.yml -E 'setup.dashboards.directory=build/kibana'"]"
+  #  networks:
+  #    - elk
+  #  environment:
+  #    setup.kibana.host: "kibana:5601"
+  #    output.elasticsearch.hosts: '["elasticsearch:9200"]'
+  #  depends_on:
+  #    - elasticsearch
+      
+# https://github.com/shazChaudhry/docker-elastic
+# https://www.elastic.co/guide/en/beats/filebeat/current/running-on-docker.html
+# https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-module-suricata.html
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:7.6.2
+    # this with filebeat.yml !!
+    #command: ["--modules=suricata -e -d '*' -c filebeat.yml"]
+    command: ["--modules=suricata", "--strict.perms=false", "-e", "-d", "'*'", "-c", "/usr/share/filebeat/filebeat.yml"]
+    volumes:
+      - ./suricata/logs:/var/log/suricata:ro
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      #- ./filebeat/data:/usr/share/filebeat/data
+      #- /var/run/docker.sock:/var/run/docker.sock
+      # This is needed for filebeat to load container log path as specified in filebeat.yml
+      #- /var/lib/docker/containers/:/var/lib/docker/containers/:ro
+    networks:
+      - elk
+    environment:
+      #output.elasticsearch.hosts: '["elasticsearch:9200"]'
+      LS_JAVA_OPTS: "-Xms256m -Xmx256m"
+    restart: always
+    depends_on:
+      - kibana
+      - suricata
+      
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.6.2
+    networks:
+      - elk
+    environment:
+      server.name: "kibana"
+      server.host: "0"
+      elasticsearch.hosts: '[ "http://elasticsearch:9200" ]'
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+
+  suricata:
+    image: jasonish/suricata:latest
+    command: -i enp1s0
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - SYS_NICE
+    volumes:
+      - ./suricata/logs:/var/log/suricata
+      - ./suricata/rules:/var/lib/suricata
+      - ./suricata/config:/etc/suricata
+    depends_on:
+      - elasticsearch
+
+networks:
+  elk:
