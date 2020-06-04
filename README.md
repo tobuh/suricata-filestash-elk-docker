@@ -13,9 +13,9 @@ The advantage is: you get Dashboards directly with the Filebeat module.
 * Look for "Dashboards" and search for "suricata". You will get the Dashboards suitable for suricata.
 * Enjoy!
 
-As this Docker image (h)ttps://github.com/jasonish/docker-suricata) is used, you can use some additional commands:
+As this Docker image (https://github.com/jasonish/docker-suricata) is used, you can use some additional commands:
 
-* Update rules: `docker exec -it --user suricata suricata_suricata_1 suricata-update -f`
+* Update suricata rules: `docker exec -it --user suricata suricata_suricata_1 suricata-update -f`
 * Logrotate: `docker exec suricata_suricata_1 sudo logrotate /etc/logrotate.d/suricata`
 
 ## Further information
